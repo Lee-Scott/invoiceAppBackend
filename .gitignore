@@ -86,3 +86,21 @@ atlassian-ide-plugin.xml
 .vscode/
 
 cached-antora-playbook.yml
+
+# Spring Boot
+*.log
+logs/
+spring-boot-starter-logging/
+
+# SQL
+*.sql
+
+# YAML properties
+*.yml
+*.yaml
+
+# Application properties
+application.properties
+application-dev.properties
+application-prod.properties
+application-test.properties
