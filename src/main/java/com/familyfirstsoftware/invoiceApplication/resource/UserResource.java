@@ -7,9 +7,11 @@ import com.familyfirstsoftware.invoiceApplication.domain.UserPrincipal;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
 import com.familyfirstsoftware.invoiceApplication.exception.ApiException;
 import com.familyfirstsoftware.invoiceApplication.form.LoginForm;
+import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
 import com.familyfirstsoftware.invoiceApplication.provider.TokenProvider;
 import com.familyfirstsoftware.invoiceApplication.service.RoleService;
 import com.familyfirstsoftware.invoiceApplication.service.UserService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,11 +28,13 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.familyfirstsoftware.invoiceApplication.dtoMapper.UserDTOMapper.toUser;
 import static com.familyfirstsoftware.invoiceApplication.utils.ExceptionUtils.processError;
+import static com.familyfirstsoftware.invoiceApplication.utils.UserUtils.*;
 import static java.time.LocalDateTime.now;
 import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -59,15 +63,15 @@ public class UserResource {
 
     @PostMapping(path = "/login")
     public ResponseEntity<HttpResponse> login(@RequestBody @Valid LoginForm loginForm) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword()));
+        /*authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword()));
         UserDTO user = userService.getUserByEmail(loginForm.getEmail());
-        return user.isUsingMfa() ? sendVerificationCode(user) : sendResponse(user);
+        return user.isUsingMfa() ? sendVerificationCode(user) : sendResponse(user);*/
 
-        /*Authentication authentication = authenticate(loginForm.getEmail(), loginForm.getPassword());
-        UserDTO user = getAuthenticatedUser(authentication);
-        System.out.println("authentication: " + authentication);
-        System.out.println("UserDTO: " + ((UserPrincipal) authentication.getPrincipal()).getUser());
-        return user.isUsingMfa() ? sendVerificationCode(user) : sendResponse(user); */
+        Authentication authentication = authenticate(loginForm.getEmail(), loginForm.getPassword());
+        UserDTO user = getLoggedInUser(authentication);
+        //System.out.println("authentication: " + authentication);
+        //System.out.println("UserDTO: " + ((UserPrincipal) authentication.getPrincipal()).getUser());
+        return user.isUsingMfa() ? sendVerificationCode(user) : sendResponse(user);
 
     }
 
@@ -135,14 +139,16 @@ public class UserResource {
     }*/
 
 
-    /*@GetMapping("/profile")
+    @GetMapping("/profile")
     public ResponseEntity<HttpResponse> profile(Authentication authentication) {
-
-        soutOnAllAuthenticationVarForTesting(authentication);
+        //soutOnAllAuthenticationVarForTesting(authentication);
         //System.out.println("!     userService.getUserByEmail(getAuthenticatedUser(authentication).getEmail() " + userService.getUserByEmail(getAuthenticatedUser(authentication).getEmail()));
-        UserDTO user = userService.getUserByEmail(authentication.getName());
+        //String principal = authentication.getPrincipal().toString();
+        //String email = extractEmail(principal);
 
-        System.out.println("$$$ AUTHENTICATION.getPrincipal UserResource.profile: " + authentication.getPrincipal());
+        UserDTO user = userService.getUserByEmail(getAuthenticatedUser(authentication).getEmail());
+
+        //System.out.println("$$$ AUTHENTICATION.getPrincipal UserResource.profile: " + authentication.getPrincipal());
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
                         .timeStamp(now().toString())
@@ -151,10 +157,11 @@ public class UserResource {
                         .status(OK)
                         .statusCode(OK.value())
                         .build());
-    }*/
+    }
 
-    @GetMapping("/profile")
+    /*@GetMapping("/profile")
     public ResponseEntity<HttpResponse> profile(Authentication authentication) {
+        //UserDTO userTwo = userService.getUserByEmail(getAuthenticatedUser(authentication).getEmail());
         soutOnAllAuthenticationVarForTesting(authentication);
         try {
             if (authentication == null) {
@@ -208,29 +215,24 @@ public class UserResource {
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .build());
         }
+    }*/
+
+    // patch is used to update a resource partially not updating the password or is using mfa or their roll
+    @PatchMapping("/update")
+    public ResponseEntity<HttpResponse> updateUser(@RequestBody @Valid UpdateForm user) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(5);
+        UserDTO updateUser = userService.updateUserDetails(user);
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .data(of("user", updateUser))
+                        .message("User Updated")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
     }
 
-    private static void soutOnAllAuthenticationVarForTesting(Authentication authentication) {
-        System.out.println("\n" + "-------------------------------------------------------");
-        System.out.println("authentication: " + authentication);
-        System.out.println("authentication.getPrincipal().toString(): " + authentication.getPrincipal().toString());
-        System.out.println("authentication.getName(): " + (authentication.getName()));
-        System.out.println("authentication.toString(): " + authentication.toString());
-        System.out.println("authentication.getAuthorities(): " + authentication.getAuthorities());
-        System.out.println("authentication.getDetails(): " + authentication.getDetails());
-        System.out.println("authentication.getCredentials(): " + authentication.getCredentials());
-        System.out.println("-------------------------------------------------------\n");
-    }
 
-    public String extractEmail(String principal) {
-        String regex = "email=([^,]+)";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(principal);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return null;
-    }
 
 
     // Start - to reset password when user is not logged
@@ -290,9 +292,7 @@ public class UserResource {
     }
     // END - to reset password when user is not logged in
 
-    private UserDTO getAuthenticatedUser(Authentication authentication){
-        return ((UserPrincipal) authentication.getPrincipal()).getUser();
-    }
+
 
 
     @GetMapping(path = "/verify/account/{key}")
@@ -309,7 +309,7 @@ public class UserResource {
     public ResponseEntity<HttpResponse> refreshToken(HttpServletRequest request) {
         if(isHeaderAndTokenValid(request)){
             String token = request.getHeader(AUTHORIZATION).substring(TOKEN_PREFIX.length());
-            UserDTO user = userService.getUserByEmail(tokenProvider.getSubject(token, request));
+            UserDTO user = userService.getUserById(tokenProvider.getSubject(token, request));
             return ResponseEntity.ok().body(
                     HttpResponse.builder()
                             .timeStamp(now().toString())
@@ -372,7 +372,9 @@ public class UserResource {
             return authentication;
         }catch (Exception exception){
             processError(request, response, exception);
-            throw new ApiException(exception.getMessage());
+            // already processing the error
+            //throw new ApiException(exception.getMessage());
+            return null;
         }
     }
 

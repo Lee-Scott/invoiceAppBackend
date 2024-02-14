@@ -1,1 +1,20 @@
 Twilio Code: DM34ZE218S3CAHSWUDFBXFB6
+
+
+Data Modeling
+Should do data modeling first so you know how to setup your database, here are the steps
+Requirements - Lots of meetings to future out requirements with client
+Conceptual model - visual model very simple, UML unified modeling language or ERD entity relationship diagram,
+Logic model - the data structure a refinement of the conceptual model, database agnostic
+Physical model - refinement of logic model. Implementation of logic model but taking for account logical model and database specific such as postgres
+
+Use draw.io to make a ERD
+
+Structure
+Domain could also be model
+
+
+TODO:
+Create a date on the account verification table to stop the user from using an old signup code. Add a trigger or batch application that runs every 24 hours or something that clears out users that did not verify with the code
+
+

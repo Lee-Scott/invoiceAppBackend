@@ -3,6 +3,7 @@ package com.familyfirstsoftware.invoiceApplication.service.implementation;
 import com.familyfirstsoftware.invoiceApplication.domain.Role;
 import com.familyfirstsoftware.invoiceApplication.domain.User;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
+import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
 import com.familyfirstsoftware.invoiceApplication.repository.RoleRepository;
 import com.familyfirstsoftware.invoiceApplication.repository.UserRepository;
 import com.familyfirstsoftware.invoiceApplication.service.UserService;
@@ -62,6 +63,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO verifyAccountKey(String key) {
         return mapToUserDTO(userRepository.verifyAccountKey(key));
+    }
+
+    @Override
+    public UserDTO updateUserDetails(UpdateForm user) {
+        return mapToUserDTO(userRepository.updateUserDetails(user));
     }
 
     /* never should return the user object, but instead the dto or void. this is how we are separating these concerns

@@ -2,6 +2,7 @@ package com.familyfirstsoftware.invoiceApplication.repository;
 
 import com.familyfirstsoftware.invoiceApplication.domain.User;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
+import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
 
 import java.util.Collection;
 
@@ -22,4 +23,6 @@ public interface UserRepository<T extends User> {
     void renewPassword(String key, String password, String confirmPassword);
 
     T verifyAccountKey(String key);
+
+    T updateUserDetails(UpdateForm user);
 }

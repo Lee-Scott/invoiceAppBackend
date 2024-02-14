@@ -2,6 +2,7 @@ package com.familyfirstsoftware.invoiceApplication.service;
 
 import com.familyfirstsoftware.invoiceApplication.domain.User;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
+import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
 
 public interface UserService {
     UserDTO createUser(User user);
@@ -16,6 +17,8 @@ public interface UserService {
 
     UserDTO verifyAccountKey(String key);
 
-    // should only be dto
+    UserDTO updateUserDetails(UpdateForm user);
+
+    // should only be dto so not like:
     // User getUser(String email);
 }

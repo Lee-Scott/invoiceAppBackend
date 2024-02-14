@@ -6,6 +6,7 @@ import com.familyfirstsoftware.invoiceApplication.domain.UserPrincipal;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
 import com.familyfirstsoftware.invoiceApplication.enumeration.VerificationType;
 import com.familyfirstsoftware.invoiceApplication.exception.ApiException;
+import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
 import com.familyfirstsoftware.invoiceApplication.repository.RoleRepository;
 import com.familyfirstsoftware.invoiceApplication.repository.UserRepository;
 
@@ -78,7 +79,15 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
 
     @Override
     public User get(Long id) {
-        return null;
+        try {
+            return jdbc.queryForObject(SELECT_USER_BY_ID_QUERY, of("id", id), new UserRowMapper());
+        } catch (EmptyResultDataAccessException exception) {
+            log.error("Exception in UserRepositoryImpl.getUserByEmail");
+            throw new ApiException("No User found by id: " + id);
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
+            throw new ApiException("An error occurred. Please try again.");
+        }
     }
 
     @Override
@@ -97,7 +106,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        System.out.println("In URI loadUserByUsername. email:" + email);
+        log.info("In UserRepositoryImpl.loadUserByUsername. email:" + email);
         User user = getUserByEmail(email);
         if(user == null) {
             log.error("In URI *** User not found in the database");
@@ -124,13 +133,13 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
     @Override
     public User getUserByEmail(String email) {
         try {
-            System.out.println("      UserRepositoryImpl.getUserByEmail email: " );
+
             User user = jdbc.queryForObject(SELECT_USER_BY_EMAIL_QUERY, of("email", email), new UserRowMapper());
-            System.out.println("      UserRepositoryImpl.getUserByEmail User: " + user);
+            log.info("UserRepositoryImpl.getUserByEmail User: " + user);
             return user;
 
         } catch (EmptyResultDataAccessException exception) {
-            System.out.println("         Exception in UserRepositoryImpl.getUserByEmail");
+            log.error("Exception in UserRepositoryImpl.getUserByEmail");
             throw new ApiException("No User found by email: " + email);
         } catch (Exception exception) {
             log.error(exception.getMessage());
@@ -249,6 +258,20 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
 
     }
 
+    @Override
+    public User updateUserDetails(UpdateForm user) {
+        try {
+            jdbc.update(UPDATE_USER_DETAILS_QUERY, getUserDetailsParameterSource(user));
+            return get(user.getId());
+        } catch (EmptyResultDataAccessException exception) {
+            throw new ApiException("No User found by id: " + user.getId());
+        }
+        catch (Exception exception) {
+            log.error(exception.getMessage());
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
     private Boolean isLinkExpired(String key, VerificationType password) {
         try {
             return jdbc.queryForObject(SELECT_EXPIRATION_BY_URL, Map.of("url", getVerificationUrl(key, password.getType())), Boolean.class);
@@ -277,6 +300,19 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
                 .addValue("lastName", user.getLastName())
                 .addValue("email", user.getEmail())
                 .addValue("password", encoder.encode(user.getPassword()));
+    }
+    private SqlParameterSource getUserDetailsParameterSource(UpdateForm user) {
+        return new MapSqlParameterSource()
+                .addValue("id", user.getId())
+                .addValue("firstName", user.getFirstName())
+                .addValue("lastName", user.getLastName())
+                .addValue("email", user.getEmail())
+                .addValue("phone", user.getPhone())
+                .addValue("address", user.getAddress())
+                .addValue("title", user.getTitle())
+                .addValue("bio", user.getBio());
+
+
     }
 
     private String getVerificationUrl(String key, String type) {
