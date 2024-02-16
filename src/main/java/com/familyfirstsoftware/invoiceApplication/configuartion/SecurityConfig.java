@@ -13,10 +13,17 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.springframework.http.HttpMethod.DELETE;
 
@@ -42,9 +49,10 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final CustomAuthorizationFilter customAuthorizationFilter;
 
-    private static final String[] PUBLIC_URLS = { "/user/verify/password/**", "/user/login/**", "/user/verify/code/**",
-            "/user/register/**", "/user/resetpassword/**", "/user/profile/**", "/user/verify/account/**", "/user/refresh/token/**" };
+    private static final String[] PUBLIC_URLS = {"/user/verify/password/**", "/user/login/**", "/user/verify/code/**",
+            "/user/register/**", "/user/resetpassword/**", "/user/profile/**", "/user/verify/account/**", "/user/refresh/token/**"};
 
+    // pre 3.0.0
     /*@Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable().cors().disable();
@@ -57,7 +65,9 @@ public class SecurityConfig {
         http.addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }*/
-    @Bean
+
+    //3.0.0
+    /*@Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception { // Feel free to use the Lambda notation
         http.csrf(csrf -> csrf.disable()).cors(withDefaults());
         http.sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
@@ -69,6 +79,43 @@ public class SecurityConfig {
         http.addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
         http.authorizeHttpRequests(request -> request.anyRequest().authenticated());
         return http.build();
+    }*/
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception { // Feel free to use the Lambda notation
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(configure -> configure.configurationSource(configurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
+                .exceptionHandling(exception ->
+                        exception.accessDeniedHandler(customAccessDeniedHandler)
+                                .authenticationEntryPoint(customAuthenticationEntryPoint))
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers(PUBLIC_URLS).permitAll()
+                                .requestMatchers(OPTIONS).permitAll()
+                                .requestMatchers(DELETE, "/user/delete/**")
+                                .hasAuthority("DELETE:USER")
+                                .requestMatchers(DELETE, "/customer/delete/**")
+                                .hasAuthority("DELETE:CUSTOMER")
+                                .anyRequest().authenticated())
+                .addFilterBefore(customAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource configurationSource() {
+        var corsConfiguration = new CorsConfiguration();
+        corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:3000", "http://securecapita.org"));
+
+        corsConfiguration.setAllowedHeaders(Arrays.asList("Origin", "Access-Control-Allow-Origin", "Content-Type",
+                "Accept", "Jwt-Token", "Authorization", "Origin", "Accept", "X-Requested-With",
+                "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+        corsConfiguration.setExposedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Jwt-Token", "Authorization",
+                "Access-Control-Allow-Origin", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "File-Name"));
+        corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        var source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return source;
     }
 
     @Bean
