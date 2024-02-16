@@ -24,7 +24,7 @@ public class UserUtils {
         System.out.println("authentication: " + authentication);
         System.out.println("authentication.getPrincipal().toString(): " + authentication.getPrincipal().toString());
         System.out.println("authentication.getName(): " + (authentication.getName()));
-        System.out.println("authentication.toString(): " + authentication.toString());
+        System.out.println("authentication.toString(): " + authentication);
         System.out.println("authentication.getAuthorities(): " + authentication.getAuthorities());
         System.out.println("authentication.getDetails(): " + authentication.getDetails());
         System.out.println("authentication.getCredentials(): " + authentication.getCredentials());

@@ -9,7 +9,7 @@ import java.util.Collection;
 public interface RoleRepository<T extends Role> {
     /* Basic CRUD Operations */
     T create(T data);
-    Collection<T> list(int page, int pageSize);
+    Collection<T> list(); // could do list(int limit) if we want to limit the number of results
     T get(Long id);
     T update(T data);
     Boolean delete(Long id);

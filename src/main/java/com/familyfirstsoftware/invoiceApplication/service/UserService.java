@@ -19,6 +19,10 @@ public interface UserService {
 
     UserDTO updateUserDetails(UpdateForm user);
 
+    void updatePassword(Long id, String currentPassword, String newPassword, String confirmNewPassword);
+
+    void updateUserRole(Long userId, String roleName);
+
     // should only be dto so not like:
     // User getUser(String email);
 }

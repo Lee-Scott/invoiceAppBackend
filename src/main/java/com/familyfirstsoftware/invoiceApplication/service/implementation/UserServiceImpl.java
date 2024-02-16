@@ -68,6 +68,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO updateUserDetails(UpdateForm user) {
         return mapToUserDTO(userRepository.updateUserDetails(user));
+
+    }
+
+    @Override
+    public void updatePassword(Long id, String currentPassword, String newPassword, String confirmNewPassword) {
+        userRepository.updatePassword(id, currentPassword, newPassword, confirmNewPassword);
+    }
+
+    @Override
+    public void updateUserRole(Long userId, String roleName) {
+        roleRoleRepository.updateUserRole(userId, roleName);
     }
 
     /* never should return the user object, but instead the dto or void. this is how we are separating these concerns

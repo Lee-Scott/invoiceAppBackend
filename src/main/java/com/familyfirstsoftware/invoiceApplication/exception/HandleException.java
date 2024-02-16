@@ -28,13 +28,6 @@ import java.util.stream.Collectors;
 import static java.time.LocalDateTime.now;
 import static org.springframework.http.HttpStatus.*;
 
-/**
- * @author Junior RT
- * @version 1.0
- * @license Get Arrays, LLC (https://getarrays.io)
- * @since 1/5/2023
- */
-
 @ControllerAdvice
 @Slf4j
 public class HandleException extends ResponseEntityExceptionHandler implements ErrorController {
@@ -111,7 +104,7 @@ public class HandleException extends ResponseEntityExceptionHandler implements E
         return new ResponseEntity<>(
                 HttpResponse.builder()
                         .timeStamp(now().toString())
-                        .reason("Access denied. You don\'t have access")
+                        .reason("Access denied. You don't have access")
                         .developerMessage(exception.getMessage())
                         .status(FORBIDDEN)
                         .statusCode(FORBIDDEN.value())

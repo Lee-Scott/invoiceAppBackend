@@ -25,17 +25,27 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Slf4j
 public class ExceptionUtils {
 
+
     public static void processError(HttpServletRequest request, HttpServletResponse response, Exception exception) {
-        // TODO InvalidClaimException & TokenExpiredException shouldn't be exposed
+
         if(exception instanceof ApiException ||
                 exception instanceof DisabledException ||
                 exception instanceof LockedException ||
-                exception instanceof BadCredentialsException ||
-                exception instanceof InvalidClaimException ||
-                exception instanceof TokenExpiredException
+                exception instanceof BadCredentialsException
         ){
-            //TODO show the path that the user was on. should be in request
             HttpResponse httpResponse = getHttpResponse(response, exception.getMessage(), BAD_REQUEST);
+            writeResponse(httpResponse, response);
+        } else if(exception instanceof TokenExpiredException || exception instanceof InvalidClaimException) {
+            HttpResponse httpResponse = getHttpResponse(response, "Token has expired. Please login again", UNAUTHORIZED);
+            writeResponse(httpResponse, response);
+        } else if(exception instanceof AuthenticationException) {
+            HttpResponse httpResponse = getHttpResponse(response, "An Authentication Exception occurred. Please try again", INTERNAL_SERVER_ERROR);
+            writeResponse(httpResponse, response);
+        } else if(exception instanceof ServletException) {
+            HttpResponse httpResponse = getHttpResponse(response, "An Servlet Exception occurred. Please try again", INTERNAL_SERVER_ERROR);
+            writeResponse(httpResponse, response);
+        } else if(exception instanceof IOException ) {
+            HttpResponse httpResponse = getHttpResponse(response, "An error occurred. Please try again", INTERNAL_SERVER_ERROR);
             writeResponse(httpResponse, response);
         } else {
             HttpResponse httpResponse = getHttpResponse(response, "An error occurred. Please try again", INTERNAL_SERVER_ERROR);
@@ -47,7 +57,6 @@ public class ExceptionUtils {
     private static void writeResponse(HttpResponse httpResponse, HttpServletResponse response) {
         OutputStream out;
         try{
-
             out = response.getOutputStream();
             ObjectMapper mapper = new ObjectMapper();
             mapper.writeValue(out, httpResponse);
@@ -55,20 +64,17 @@ public class ExceptionUtils {
         }catch (Exception exception){
             exception.printStackTrace();
         }
-
     }
-
 
     public static HttpResponse getHttpResponse(HttpServletResponse response, String message, HttpStatus httpStatus) {
         HttpResponse httpResponse = HttpResponse.builder()
                 .timeStamp(now().toString())
                 .reason(message)
                 .status(httpStatus)
-                .statusCode(UNAUTHORIZED.value())
+                .statusCode(httpStatus.value())
                 .build();
         response.setContentType(APPLICATION_JSON_VALUE);
-        response.setStatus(UNAUTHORIZED.value());
+        response.setStatus(httpStatus.value());
         return httpResponse;
-
     }
 }

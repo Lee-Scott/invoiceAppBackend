@@ -5,13 +5,12 @@ import com.familyfirstsoftware.invoiceApplication.domain.HttpResponse;
 import com.familyfirstsoftware.invoiceApplication.domain.User;
 import com.familyfirstsoftware.invoiceApplication.domain.UserPrincipal;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
-import com.familyfirstsoftware.invoiceApplication.exception.ApiException;
 import com.familyfirstsoftware.invoiceApplication.form.LoginForm;
 import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
+import com.familyfirstsoftware.invoiceApplication.form.UpdateUserForm;
 import com.familyfirstsoftware.invoiceApplication.provider.TokenProvider;
 import com.familyfirstsoftware.invoiceApplication.service.RoleService;
 import com.familyfirstsoftware.invoiceApplication.service.UserService;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -19,22 +18,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.familyfirstsoftware.invoiceApplication.dtoMapper.UserDTOMapper.toUser;
 import static com.familyfirstsoftware.invoiceApplication.utils.ExceptionUtils.processError;
-import static com.familyfirstsoftware.invoiceApplication.utils.UserUtils.*;
+import static com.familyfirstsoftware.invoiceApplication.utils.UserUtils.getAuthenticatedUser;
+import static com.familyfirstsoftware.invoiceApplication.utils.UserUtils.getLoggedInUser;
 import static java.time.LocalDateTime.now;
 import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -44,6 +40,7 @@ import static org.springframework.web.servlet.support.ServletUriComponentsBuilde
 
 /*
  *  Called a resource because we are just making an API
+ * TODO implement @EnableMethodSecurity in the controller.
  */
 @Slf4j
 @RestController
@@ -58,7 +55,6 @@ public class UserResource {
     private final TokenProvider tokenProvider;
     private final HttpServletRequest request;
     private final HttpServletResponse response;
-
 
 
     @PostMapping(path = "/login")
@@ -145,14 +141,12 @@ public class UserResource {
         //System.out.println("!     userService.getUserByEmail(getAuthenticatedUser(authentication).getEmail() " + userService.getUserByEmail(getAuthenticatedUser(authentication).getEmail()));
         //String principal = authentication.getPrincipal().toString();
         //String email = extractEmail(principal);
-
         UserDTO user = userService.getUserByEmail(getAuthenticatedUser(authentication).getEmail());
-
         //System.out.println("$$$ AUTHENTICATION.getPrincipal UserResource.profile: " + authentication.getPrincipal());
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
                         .timeStamp(now().toString())
-                        .data(of("user", user))
+                        .data(of("user", user, "roles", roleService.getRoles()))
                         .message("Profile Retrieved")
                         .status(OK)
                         .statusCode(OK.value())
@@ -220,7 +214,7 @@ public class UserResource {
     // patch is used to update a resource partially not updating the password or is using mfa or their roll
     @PatchMapping("/update")
     public ResponseEntity<HttpResponse> updateUser(@RequestBody @Valid UpdateForm user) throws InterruptedException {
-        TimeUnit.SECONDS.sleep(5);
+        TimeUnit.SECONDS.sleep(2);
         UserDTO updateUser = userService.updateUserDetails(user);
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
@@ -231,8 +225,6 @@ public class UserResource {
                         .statusCode(OK.value())
                         .build());
     }
-
-
 
 
     // Start - to reset password when user is not logged
@@ -253,7 +245,7 @@ public class UserResource {
 
     @GetMapping("/resetpassword/{email}")
     public ResponseEntity<HttpResponse> resetPassword(@PathVariable("email") String email) {
-       userService.resetPassword(email);
+        userService.resetPassword(email);
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
                         .timeStamp(now().toString())
@@ -279,8 +271,8 @@ public class UserResource {
 
     @PostMapping("/resetpassword/{key}/{password}/{confirmPassword}")
     public ResponseEntity<HttpResponse> resetPasswordWithKey(@PathVariable("key") String key,
-                                                          @PathVariable("password") String password,
-                                                          @PathVariable("confirmPassword") String confirmPassword) {
+                                                             @PathVariable("password") String password,
+                                                             @PathVariable("confirmPassword") String confirmPassword) {
         userService.renewPassword(key, password, confirmPassword);
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
@@ -290,10 +282,41 @@ public class UserResource {
                         .statusCode(OK.value())
                         .build());
     }
-    // END - to reset password when user is not logged in
+    // END - to reset password when a user is not logged in
 
+    //@PreAuthorize("#authentication.principal.id == @tokenProvider.getUserIdFromToken(#request.getHeader('Authorization').substring(7))")
+    // @Valid makes sure the exceptions are thrown in the updateUserForm such as @NotEmpty(message = "Current password cannot be empty")
+    // these messages get put into our handleException.java class for example handleMethodArgumentNotValid exception.getBingResult().getFieldError();
+    @PatchMapping("/update/password")
+    public ResponseEntity<HttpResponse> updatePassword(Authentication authentication, @RequestBody @Valid UpdateUserForm form) {
+       // you could check that the user id = the user id in the token using @PreAuthorize, but it is not necessary
+        // because we are gettingAuthenticatedUser in userUtils
+        UserDTO userDto = getAuthenticatedUser(authentication);
+        userService.updatePassword(userDto.getId(), form.getCurrentPassword(), form.getNewPassword(), form.getConfirmNewPassword());
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .message("Password updated successfully")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
 
-
+    @PatchMapping("/update/role/{roleName}")
+    public ResponseEntity<HttpResponse> updateUserRole(Authentication authentication, @PathVariable("roleName") String roleName) {
+        // you could check that the user id = the user id in the token using @PreAuthorize, but it is not necessary
+        // because we are gettingAuthenticatedUser in userUtils
+        UserDTO userDto = getAuthenticatedUser(authentication);
+        userService.updateUserRole(userDto.getId(), roleName);
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .data(of("user", userService.getUserById(userDto.getId()), "roles", roleService.getRoles()))
+                        .timeStamp(now().toString())
+                        .message("Role updated successfully")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
 
     @GetMapping(path = "/verify/account/{key}")
     public ResponseEntity<HttpResponse> verifyAccount(@PathVariable("key") String key) {
@@ -305,9 +328,10 @@ public class UserResource {
                         .statusCode(OK.value())
                         .build());
     }
+
     @GetMapping(path = "/refresh/token")
     public ResponseEntity<HttpResponse> refreshToken(HttpServletRequest request) {
-        if(isHeaderAndTokenValid(request)){
+        if (isHeaderAndTokenValid(request)) {
             String token = request.getHeader(AUTHORIZATION).substring(TOKEN_PREFIX.length());
             UserDTO user = userService.getUserById(tokenProvider.getSubject(token, request));
             return ResponseEntity.ok().body(
@@ -319,7 +343,7 @@ public class UserResource {
                             .status(OK)
                             .statusCode(OK.value())
                             .build());
-        }else {
+        } else {
             // Not throwing an exception
             return ResponseEntity.badRequest().body(
                     HttpResponse.builder()
@@ -336,9 +360,9 @@ public class UserResource {
         return request.getHeader(AUTHORIZATION) != null // is valid
                 && request.getHeader(AUTHORIZATION).startsWith(TOKEN_PREFIX) // starts with bear
                 && tokenProvider.isTokenValid(
-                        tokenProvider.getSubject( request.getHeader(AUTHORIZATION).substring(TOKEN_PREFIX.length()), request),// the email
-                        request.getHeader(AUTHORIZATION).substring(TOKEN_PREFIX.length()) // the request
-                            );
+                tokenProvider.getSubject(request.getHeader(AUTHORIZATION).substring(TOKEN_PREFIX.length()), request),// the email
+                request.getHeader(AUTHORIZATION).substring(TOKEN_PREFIX.length()) // the request
+        );
     }
         
 
@@ -358,19 +382,19 @@ public class UserResource {
     public ResponseEntity<HttpResponse> handleError(HttpServletRequest request) {
         //log.info("User principle: {}", authentication);
         return new ResponseEntity<>(HttpResponse.builder()
-                        .timeStamp(now().toString())
-                        .reason("There is no mapping for a " + request.getMethod() + " request for this path on the server")
-                        .status(NOT_FOUND)
-                        .statusCode(NOT_FOUND.value())
-                        .build(), NOT_FOUND);
+                .timeStamp(now().toString())
+                .reason("There is no mapping for a " + request.getMethod() + " request for this path on the server")
+                .status(NOT_FOUND)
+                .statusCode(NOT_FOUND.value())
+                .build(), NOT_FOUND);
     }
 
-    private Authentication authenticate(String email, String password){
-        try{
+    private Authentication authenticate(String email, String password) {
+        try {
             Authentication authentication = authenticationManager.authenticate(unauthenticated(email, password));
             log.info("User principle: {}", authentication);
             return authentication;
-        }catch (Exception exception){
+        } catch (Exception exception) {
             processError(request, response, exception);
             // already processing the error
             //throw new ApiException(exception.getMessage());
