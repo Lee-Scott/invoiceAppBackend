@@ -9,6 +9,7 @@ import com.familyfirstsoftware.invoiceApplication.repository.UserRepository;
 import com.familyfirstsoftware.invoiceApplication.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import static com.familyfirstsoftware.invoiceApplication.dtoMapper.UserDTOMapper.fromUser;
 
@@ -79,6 +80,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateUserRole(Long userId, String roleName) {
         roleRoleRepository.updateUserRole(userId, roleName);
+    }
+
+    @Override
+    public void updateAccoutSettings(Long id, Boolean enabled, Boolean notLocked) {
+        userRepository.updateAccountSettings(id, enabled, notLocked);
+    }
+
+    @Override
+    public UserDTO toggleMfa(String email) {
+        return mapToUserDTO(userRepository.toggleMfa(email));
+    }
+
+    @Override
+    public void updateProfileImage(UserDTO user, MultipartFile image) {
+        userRepository.updateProfileImage(user, image);
     }
 
     /* never should return the user object, but instead the dto or void. this is how we are separating these concerns

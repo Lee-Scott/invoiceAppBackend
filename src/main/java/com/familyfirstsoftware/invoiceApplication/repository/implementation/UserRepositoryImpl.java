@@ -11,6 +11,7 @@ import com.familyfirstsoftware.invoiceApplication.repository.RoleRepository;
 import com.familyfirstsoftware.invoiceApplication.repository.UserRepository;
 
 import com.familyfirstsoftware.invoiceApplication.rowMapper.UserRowMapper;
+import com.familyfirstsoftware.invoiceApplication.utils.ImageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -24,22 +25,32 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 import static com.familyfirstsoftware.invoiceApplication.enumeration.RoleType.ROLE_USER;
 import static com.familyfirstsoftware.invoiceApplication.enumeration.VerificationType.ACCOUNT;
 import static com.familyfirstsoftware.invoiceApplication.enumeration.VerificationType.PASSWORD;
 import static com.familyfirstsoftware.invoiceApplication.query.UserQuery.*;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Map.of;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.time.DateFormatUtils.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
+
 
 
 @Repository
@@ -289,6 +300,43 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             throw new ApiException("An error occurred. Please try again.");
         }
     }
+
+    @Override
+    public void updateAccountSettings(Long userId, Boolean enabled, Boolean notLocked) {
+        try {
+            jdbc.update(UPDATE_USER_SETTINGS_QUERY, of("userId", userId, "enabled", enabled, "notLocked", notLocked));
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    @Override
+    public User toggleMfa(String email) {
+        User user = getUserByEmail(email);
+        if(isBlank(user.getPhone())){
+            throw new ApiException("You need to add a phone number to enable Multi-Factor Authentication.");
+        }
+        user.setUsingMfa(!user.isUsingMfa());
+        try {
+            jdbc.update(TOGGLE_USER_MFA_QUERY, of("email", email, "isUsingMfa", user.isUsingMfa()));
+            return user;
+
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
+            throw new ApiException("Unable to update Multi-Factor Authentication.");
+        }
+    }
+
+    @Override
+    public void updateProfileImage(UserDTO user, MultipartFile image) {
+        String hashedEmail = ImageUtil.setUserImageUrl(user.getEmail());
+        ImageUtil.saveImage(hashedEmail, image);
+        String imageUrl = ImageUtil.generateImageUrl(hashedEmail);
+        jdbc.update(UPDATE_USER_IMAGE_QUERY, of("imageUrl", imageUrl, "id", user.getId()));
+    }
+
+
 
     private Boolean isLinkExpired(String key, VerificationType password) {
         try {

@@ -3,6 +3,7 @@ package com.familyfirstsoftware.invoiceApplication.repository;
 import com.familyfirstsoftware.invoiceApplication.domain.User;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
 import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collection;
 
@@ -27,5 +28,11 @@ public interface UserRepository<T extends User> {
     T updateUserDetails(UpdateForm user);
 
 
-    void updatePassword(Long id, String currentPassword, String newPassword, String confirmNewPassword);
+    void updatePassword(Long userId, String currentPassword, String newPassword, String confirmNewPassword);
+
+    void updateAccountSettings(Long userId, Boolean enabled, Boolean notLocked);
+
+    T toggleMfa(String email);
+
+    void updateProfileImage(UserDTO user, MultipartFile image);
 }

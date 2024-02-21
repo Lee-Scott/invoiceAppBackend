@@ -7,6 +7,7 @@ import com.familyfirstsoftware.invoiceApplication.domain.UserPrincipal;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
 import com.familyfirstsoftware.invoiceApplication.form.LoginForm;
 import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
+import com.familyfirstsoftware.invoiceApplication.form.SettingsForm;
 import com.familyfirstsoftware.invoiceApplication.form.UpdateUserForm;
 import com.familyfirstsoftware.invoiceApplication.provider.TokenProvider;
 import com.familyfirstsoftware.invoiceApplication.service.RoleService;
@@ -18,12 +19,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -36,6 +41,7 @@ import static java.util.Map.of;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.security.authentication.UsernamePasswordAuthenticationToken.unauthenticated;
+import static org.springframework.util.MimeTypeUtils.IMAGE_PNG_VALUE;
 import static org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentContextPath;
 
 /*
@@ -48,6 +54,7 @@ import static org.springframework.web.servlet.support.ServletUriComponentsBuilde
 @RequiredArgsConstructor
 public class UserResource {
     private static final String TOKEN_PREFIX = "Bearer ";
+    private static final long DELAY = 2; // delay in seconds shows the spinner can delete to make it faster
 
     private final UserService userService;
     private final RoleService roleService;
@@ -214,7 +221,7 @@ public class UserResource {
     // patch is used to update a resource partially not updating the password or is using mfa or their roll
     @PatchMapping("/update")
     public ResponseEntity<HttpResponse> updateUser(@RequestBody @Valid UpdateForm user) throws InterruptedException {
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(DELAY);
         UserDTO updateUser = userService.updateUserDetails(user);
         return ResponseEntity.ok().body(
                 HttpResponse.builder()
@@ -300,6 +307,60 @@ public class UserResource {
                         .status(OK)
                         .statusCode(OK.value())
                         .build());
+    }
+
+    @PatchMapping("/update/settings")
+    public ResponseEntity<HttpResponse> updateAccountSettings(Authentication authentication, @RequestBody @Valid SettingsForm form) {
+        UserDTO userDto = getAuthenticatedUser(authentication);
+        userService.updateAccoutSettings(userDto.getId(), form.getEnabled(), form.getNotLocked());
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .data(of("user", userService.getUserById(userDto.getId()), "roles", roleService.getRoles()))
+                        .timeStamp(now().toString())
+                        .message("Account settings updated successfully")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
+
+    @PatchMapping("/togglemfa")
+    public ResponseEntity<HttpResponse> toggleMfa(Authentication authentication) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(DELAY); // shows the spinner can remove to speed it up
+        UserDTO user = userService.toggleMfa(getAuthenticatedUser(authentication).getEmail());
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .data(of("user", user, "roles", roleService.getRoles()))
+                        .timeStamp(now().toString())
+                        .message("Multi-Factor Authentication settings updated successfully")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
+
+    @PatchMapping("/update/image")
+    public ResponseEntity<HttpResponse> updateProfileImage(Authentication authentication, @RequestParam("image") MultipartFile image) throws InterruptedException {TimeUnit.SECONDS.sleep(DELAY); // shows the spinner can remove to speed it up
+        UserDTO user = getAuthenticatedUser(authentication); // this user will not have these changes until the next request
+        userService.updateProfileImage(user, image); // this user will not have these changes caz its void
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .data(of("user", userService.getUserById(user.getId()), "roles", roleService.getRoles()))// gets fresh data from db
+                        .timeStamp(now().toString())
+                        .message("Profile image updated successfully")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
+
+    @GetMapping(value = "/image/{imgName}", produces = IMAGE_PNG_VALUE)
+    public ResponseEntity<?> getProfileImage(@PathVariable("imgName") String fileName) {
+        try {
+            byte[] imageBytes = Files.readAllBytes(Paths.get(System.getProperty("user.home") + "/downloads/images/" + fileName));
+            return ResponseEntity.ok().body(imageBytes);
+        } catch (NoSuchFileException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Image not found: " + fileName);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error reading image: " + fileName);
+        }
     }
 
     @PatchMapping("/update/role/{roleName}")
@@ -437,4 +498,5 @@ public class UserResource {
                 roleService.getRoleById(user.getId()));
         //return new UserPrincipal(userService.getUser(user.getEmail()), roleService.getRoleById(user.getId()));
     }
+
 }
