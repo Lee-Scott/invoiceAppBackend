@@ -9,3 +9,8 @@ spring:
 application:
   title: Invoice System
   version: 1.0
+
+#logging:
+#  level:
+#    root: DEBUG
+#    com.familyfirstsoftware.invoiceApplication: INFO

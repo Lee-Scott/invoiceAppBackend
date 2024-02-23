@@ -60,7 +60,7 @@ import static org.springframework.web.servlet.support.ServletUriComponentsBuilde
 @RequiredArgsConstructor
 public class UserResource {
     private static final String TOKEN_PREFIX = "Bearer ";
-    private static final long DELAY = 2; // delay in seconds shows the spinner can delete to make it faster
+    private static final long DELAY = 0; // delay in seconds shows the spinner can delete to make it faster
 
     private final UserService userService;
     private final RoleService roleService;
@@ -367,7 +367,7 @@ public class UserResource {
                         .build());
     }
 
-    @PostMapping(value = "/image/{imgName}", produces = IMAGE_PNG_VALUE)
+    @GetMapping(value = "/image/{imgName}", produces = IMAGE_PNG_VALUE)
     public ResponseEntity<?> getProfileImage(@PathVariable("imgName") String fileName) {
         try {
             byte[] imageBytes = Files.readAllBytes(Paths.get(System.getProperty("user.home") + "/downloads/images/" + fileName));
