@@ -34,16 +34,22 @@ public class UserPrincipal implements UserDetails {
         return this.user.getEmail();
     }
 
+    // TODO implement the following method
+    // create another table to save the password of the user with an expiration after 30 days
+    // pass private final Date passwordExpirationDate;
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
+
 
     @Override
     public boolean isAccountNonLocked() {
         return this.user.isNotLocked();
     }
 
+    // TODO implement the following method
     @Override
     public boolean isCredentialsNonExpired() {
         return true;

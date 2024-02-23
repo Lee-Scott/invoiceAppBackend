@@ -25,7 +25,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Slf4j
 public class ExceptionUtils {
 
-
+    // Just adds on to the response object doesn't throw an exception
     public static void processError(HttpServletRequest request, HttpServletResponse response, Exception exception) {
 
         if(exception instanceof ApiException ||

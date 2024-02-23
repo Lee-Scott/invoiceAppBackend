@@ -7,7 +7,7 @@ import org.springframework.security.core.Authentication;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class UserUtils {
+public class UserAthUtils {
 
     public static UserDTO getAuthenticatedUser(Authentication authentication) {
         //System.out.println("*** AUTHENTICATION in UserUtils.getAuthenticatedUser: " + authentication);
