@@ -3,13 +3,17 @@ package com.familyfirstsoftware.invoiceApplication.repository.implementation;
 
 import com.familyfirstsoftware.invoiceApplication.domain.UserEvent;
 import com.familyfirstsoftware.invoiceApplication.enumeration.EventType;
+import com.familyfirstsoftware.invoiceApplication.event.Event;
 import com.familyfirstsoftware.invoiceApplication.repository.EventRepository;
 import com.familyfirstsoftware.invoiceApplication.rowMapper.UserEventRowMapper;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 
 
@@ -20,7 +24,7 @@ import static java.util.Map.of;
 @Repository
 @RequiredArgsConstructor
 @Slf4j
-public class EventRepositoryImpl implements EventRepository {
+public class EventRepositoryImpl implements EventRepository<Event> {
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -41,5 +45,14 @@ public class EventRepositoryImpl implements EventRepository {
         //System.out.println("userId: " + userId + " eventType: " + eventType + " device: " + device + " ipAddress: " + ipAddress);
         jdbc.update(INSERT_EVENT_BY_USER_ID_QUERY, of("userId", userId, "type", eventType.toString(), "device", device, "ipAddress", ipAddress));
 
+    }
+
+    @Override
+    public void reportEvent(Event event) {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formatDateTime = now.format(formatter);
+
+        jdbc.update(INSERT_EVENT_REPORT_QUERY, of("user_event_id", event.getId(), "reported_at", formatDateTime));
     }
 }

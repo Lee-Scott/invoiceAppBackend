@@ -5,6 +5,7 @@ import com.familyfirstsoftware.invoiceApplication.domain.HttpResponse;
 import com.familyfirstsoftware.invoiceApplication.domain.User;
 import com.familyfirstsoftware.invoiceApplication.domain.UserPrincipal;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
+import com.familyfirstsoftware.invoiceApplication.event.Event;
 import com.familyfirstsoftware.invoiceApplication.event.NewUserEvent;
 import com.familyfirstsoftware.invoiceApplication.exception.ApiException;
 import com.familyfirstsoftware.invoiceApplication.form.LoginForm;
@@ -351,7 +352,22 @@ public class UserResource {
                         .build());
     }
 
-    @GetMapping(value = "/image/{imgName}", produces = IMAGE_PNG_VALUE)
+    @PostMapping(value = "/event/report")
+    public ResponseEntity<HttpResponse> reportEvent(@RequestBody Event event) {
+        System.out.println(event.toString());
+        eventService.reportEvent(event);
+
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .data(of("event", event))
+                        .timeStamp(now().toString())
+                        .message("Event reported successfully")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
+
+    @PostMapping(value = "/image/{imgName}", produces = IMAGE_PNG_VALUE)
     public ResponseEntity<?> getProfileImage(@PathVariable("imgName") String fileName) {
         try {
             byte[] imageBytes = Files.readAllBytes(Paths.get(System.getProperty("user.home") + "/downloads/images/" + fileName));

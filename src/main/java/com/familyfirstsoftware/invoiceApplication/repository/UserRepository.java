@@ -2,6 +2,7 @@ package com.familyfirstsoftware.invoiceApplication.repository;
 
 import com.familyfirstsoftware.invoiceApplication.domain.User;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
+import com.familyfirstsoftware.invoiceApplication.event.Event;
 import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,4 +36,6 @@ public interface UserRepository<T extends User> {
     T toggleMfa(String email);
 
     void updateProfileImage(UserDTO user, MultipartFile image);
+
+
 }

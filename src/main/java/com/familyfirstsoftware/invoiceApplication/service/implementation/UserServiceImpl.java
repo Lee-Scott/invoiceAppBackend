@@ -3,7 +3,9 @@ package com.familyfirstsoftware.invoiceApplication.service.implementation;
 import com.familyfirstsoftware.invoiceApplication.domain.Role;
 import com.familyfirstsoftware.invoiceApplication.domain.User;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
+import com.familyfirstsoftware.invoiceApplication.event.Event;
 import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
+import com.familyfirstsoftware.invoiceApplication.repository.EventRepository;
 import com.familyfirstsoftware.invoiceApplication.repository.RoleRepository;
 import com.familyfirstsoftware.invoiceApplication.repository.UserRepository;
 import com.familyfirstsoftware.invoiceApplication.service.UserService;
@@ -18,6 +20,7 @@ import static com.familyfirstsoftware.invoiceApplication.dtoMapper.UserDTOMapper
 public class UserServiceImpl implements UserService {
     private final UserRepository<User> userRepository;
     private final RoleRepository<Role> roleRoleRepository;
+    private final EventRepository<Event> eventRepository;
 
     @Override
     public UserDTO createUser(User user) {
@@ -96,6 +99,8 @@ public class UserServiceImpl implements UserService {
     public void updateProfileImage(UserDTO user, MultipartFile image) {
         userRepository.updateProfileImage(user, image);
     }
+
+
 
     /* never should return the user object, but instead the dto or void. this is how we are separating these concerns
     @Override

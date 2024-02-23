@@ -123,3 +123,13 @@ CREATE TABLE TwoFactorVerifications
     CONSTRAINT UQ_TwoFactorVerifications_User_Id UNIQUE (user_id),
     CONSTRAINT UQ_TwoFactorVerifications_Code UNIQUE (code)
 );
+
+DROP TABLE IF EXISTS ReportedEvents;
+
+CREATE TABLE ReportedEvents
+(
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_event_id BIGINT UNSIGNED NOT NULL,
+    reported_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_event_id) REFERENCES UserEvents (id) ON DELETE CASCADE ON UPDATE CASCADE
+);
