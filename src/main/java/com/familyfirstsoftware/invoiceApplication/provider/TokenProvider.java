@@ -97,6 +97,7 @@ public class TokenProvider {
         return authorities;
     }
 
+    // sets the UserDTO as the principal in the Authentication object
     public Authentication getAuthentication(Long userId, List<GrantedAuthority> authorities, HttpServletRequest request) {
         UsernamePasswordAuthenticationToken userPasswordAuthToken = new UsernamePasswordAuthenticationToken(userService.getUserById(userId), null, authorities);
         //UsernamePasswordAuthenticationToken userPasswordAuthToken = new UsernamePasswordAuthenticationToken(email, null, authorities);
