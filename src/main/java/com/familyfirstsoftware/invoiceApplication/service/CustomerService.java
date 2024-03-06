@@ -2,7 +2,7 @@ package com.familyfirstsoftware.invoiceApplication.service;
 
 import com.familyfirstsoftware.invoiceApplication.domain.Customer;
 import com.familyfirstsoftware.invoiceApplication.domain.Invoice;
-import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
+import com.familyfirstsoftware.invoiceApplication.domain.Stats;
 import org.springframework.data.domain.Page;
 
 public interface CustomerService {
@@ -23,4 +23,5 @@ public interface CustomerService {
     Invoice getInvoice(Long id);
 
 
+    Stats getStats();
 }

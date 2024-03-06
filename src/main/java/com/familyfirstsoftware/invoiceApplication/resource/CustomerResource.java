@@ -37,7 +37,8 @@ public class CustomerResource {
                 HttpResponse.builder()
                         .timeStamp(now().toString())
                         .data(of("user", userService.getUserByEmail(user.getEmail()),
-                                "page", customerService.getCustomers(page.orElse(0), size.orElse(10)))) // todo do the oreElse in the service
+                                "page", customerService.getCustomers(page.orElse(0), size.orElse(10)), // todo do the oreElse in the service
+                                    "stats", customerService.getStats()))
                         .message("Customers retrieved successfully")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
@@ -70,13 +71,13 @@ public class CustomerResource {
                         .build());
     }
 
-    @GetMapping(path = "/search/{id}")
+    @GetMapping(path = "/search")
     public ResponseEntity<HttpResponse> searchCustomer(@AuthenticationPrincipal UserDTO user, Optional<String> name, @RequestParam Optional<Integer> page, @RequestParam Optional<Integer> size) {
         return ResponseEntity.ok(
                 HttpResponse.builder()
                         .timeStamp(now().toString())
                         .data(of("user", userService.getUserByEmail(user.getEmail()),
-                                "customers", customerService.searchCustomers(name.orElse(""), page.orElse(0), size.orElse(10))))
+                                "page", customerService.searchCustomers(name.orElse(""), page.orElse(0), size.orElse(10))))
                         .message("Customers retrieved successfully")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())

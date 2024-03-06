@@ -2,8 +2,10 @@ package com.familyfirstsoftware.invoiceApplication.service.implementation;
 
 import com.familyfirstsoftware.invoiceApplication.domain.Customer;
 import com.familyfirstsoftware.invoiceApplication.domain.Invoice;
+import com.familyfirstsoftware.invoiceApplication.domain.Stats;
 import com.familyfirstsoftware.invoiceApplication.repository.CustomerRepository;
 import com.familyfirstsoftware.invoiceApplication.repository.InvoiceRepository;
+import com.familyfirstsoftware.invoiceApplication.rowMapper.StatsRowMapper;
 import com.familyfirstsoftware.invoiceApplication.service.CustomerService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
+
+import static com.familyfirstsoftware.invoiceApplication.query.CustomerQuery.STATS_QUERY;
+import static java.util.Map.of;
 
 import java.util.Date;
 
@@ -22,6 +28,7 @@ import java.util.Date;
 public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
     private final InvoiceRepository invoiceRepository;
+    private final NamedParameterJdbcTemplate jdbc;
 
     @Override
     public Customer createCustomer(Customer customer) {
@@ -80,5 +87,11 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Invoice getInvoice(Long id) {
         return invoiceRepository.findById(id).get();
+    }
+
+    @Override
+    public Stats getStats() {
+        // put his in a repository
+        return jdbc.queryForObject(STATS_QUERY, of(), new StatsRowMapper());
     }
 }
