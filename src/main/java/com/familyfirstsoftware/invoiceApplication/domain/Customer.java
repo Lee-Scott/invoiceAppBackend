@@ -9,6 +9,9 @@ import java.util.Collection;
 import java.util.Date;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT;
+import static jakarta.persistence.CascadeType.ALL;
+import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.GenerationType.IDENTITY;
 
 @Setter
 @Getter
@@ -18,19 +21,17 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT;
 @JsonInclude(NON_DEFAULT)
 @Entity
 public class Customer {
-
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     private Long id;
     private String name;
     private String email;
     private String type;
     private String status;
-    private String address; // TODO - this should be a separate class with its own table. customer can have multiple addresses
-    private String phoneNumber;
+    private String address;
+    private String phone;
     private String imageUrl;
     private Date createdAt;
-
-    @OneToMany(mappedBy = "customer", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer", fetch = EAGER, cascade = ALL)
     private Collection<Invoice> invoices;
 }

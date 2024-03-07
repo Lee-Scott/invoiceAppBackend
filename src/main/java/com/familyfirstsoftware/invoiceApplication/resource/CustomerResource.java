@@ -84,14 +84,14 @@ public class CustomerResource {
                         .build());
     }
 
-    @PutMapping(path = "/update")
+    @PutMapping("/update")
     public ResponseEntity<HttpResponse> updateCustomer(@AuthenticationPrincipal UserDTO user, @RequestBody Customer customer) {
         return ResponseEntity.ok(
                 HttpResponse.builder()
                         .timeStamp(now().toString())
                         .data(of("user", userService.getUserByEmail(user.getEmail()),
                                 "customer", customerService.updateCustomer(customer)))
-                        .message("Customer updated successfully")
+                        .message("Customer updated")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
                         .build());
@@ -111,14 +111,14 @@ public class CustomerResource {
                                 .build());
     }
 
-    @PostMapping(path = "/invoice/new")
+    @GetMapping(path = "/invoice/new")
     public ResponseEntity<HttpResponse> newInvoice(@AuthenticationPrincipal UserDTO user) {
         return ResponseEntity.ok(
                         HttpResponse.builder()
                                 .timeStamp(now().toString())
                                 .data(of("user", userService.getUserByEmail(user.getEmail()),
                                         "customers", customerService.getCustomers())) // so we can call this endpoint to get the customers and then create an invoice
-                                .message("Customers retrieved successfully")
+                                .message("Invoice ready to be added")
                                 .status(HttpStatus.OK)
                                 .statusCode(HttpStatus.OK.value())
                                 .build());
@@ -158,7 +158,7 @@ public class CustomerResource {
                         .timeStamp(now().toString())
                         .data(of("user", userService.getUserByEmail(user.getEmail()),
                                 "customers", customerService.getCustomers()))
-                        .message("Customers retrieved successfully")
+                        .message(String.format("Invoice added to customer with ID: %s", id))
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
                         .build());
