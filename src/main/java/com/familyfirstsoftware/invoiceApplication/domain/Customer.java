@@ -29,6 +29,8 @@ public class Customer {
     private String type;
     private String status;
     private String address;
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    @Column(name = "phone_number")
     private String phone;
     private String imageUrl;
     private Date createdAt;

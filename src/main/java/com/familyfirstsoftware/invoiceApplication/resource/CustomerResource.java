@@ -130,7 +130,7 @@ public class CustomerResource {
                 HttpResponse.builder()
                         .timeStamp(now().toString())
                         .data(of("user", userService.getUserByEmail(user.getEmail()),
-                                "customers", customerService.getInvoices(page.orElse(0), size.orElse(10))))
+                                "page", customerService.getInvoices(page.orElse(0), size.orElse(10))))
                         .message("Invoices retrieved successfully")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
@@ -139,11 +139,13 @@ public class CustomerResource {
 
     @GetMapping(path = "/invoice/get/{id}")
     public ResponseEntity<HttpResponse> getInvoice(@AuthenticationPrincipal UserDTO user, @PathVariable("id") Long id) {
+        Invoice invoice = customerService.getInvoice(id);
         return ResponseEntity.ok(
                 HttpResponse.builder()
                         .timeStamp(now().toString())
                         .data(of("user", userService.getUserByEmail(user.getEmail()),
-                                "invoice", customerService.getInvoice(id)))
+                                "invoice", invoice,
+                                "customer", invoice.getCustomer()))
                         .message("Invoices retrieved successfully")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
