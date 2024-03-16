@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -76,6 +77,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             //emailService.sendVerificationUrl(user.getFirstName(), user.getEmail(), verificationUrl, ACCOUNT);
             user.setEnabled(false);
             user.setNotLocked(true);
+            System.out.println(verificationUrl);
             return user;
         } catch (Exception exception) {
             log.error(exception.getMessage());
@@ -193,7 +195,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             User userByCode = jdbc.queryForObject(SELECT_USER_BY_USER_CODE_QUERY, of("code", code), new UserRowMapper());
             User userByEmail = jdbc.queryForObject(SELECT_USER_BY_EMAIL_QUERY, of("email", email), new UserRowMapper());
             if(userByCode.getEmail().equalsIgnoreCase(userByEmail.getEmail())) {
-                // delete 2fa code
+                // delete 2fa code after successful login
                 jdbc.update(DELETE_CODE, of("code", code));
                 return userByCode;
             } else {

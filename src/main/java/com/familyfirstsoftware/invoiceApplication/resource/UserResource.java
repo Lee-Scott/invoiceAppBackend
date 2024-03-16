@@ -86,7 +86,7 @@ public class UserResource {
                 HttpResponse.builder()
                         .timeStamp(now().toString())
                         .data(of("user", userDto)) // Map.of - static import
-                        .message("User created")
+                        .message(String.format("User created for user %s", user.getFirstName()))
                         .status(HttpStatus.CREATED)
                         .statusCode(HttpStatus.CREATED.value())
                         .build());
@@ -258,6 +258,17 @@ public class UserResource {
                         .build());
     }
 
+    @GetMapping(path = "/verify/account/{key}")
+    public ResponseEntity<HttpResponse> verifyAccount(@PathVariable("key") String key) {
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .message(userService.verifyAccountKey(key).isEnabled() ? "Account already verified" : "Account verified")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
+    }
+
     // Mid - to reset password when user is not logged in
     @GetMapping("/verify/password/{key}")
     public ResponseEntity<HttpResponse> verifyPasswordUrl(@PathVariable("key") String key) {
@@ -271,6 +282,7 @@ public class UserResource {
                         .statusCode(OK.value())
                         .build());
     }
+
 
     @PostMapping("/resetpassword/{key}/{password}/{confirmPassword}")
     public ResponseEntity<HttpResponse> resetPasswordWithKey(@PathVariable("key") String key,
@@ -396,16 +408,7 @@ public class UserResource {
                         .build());
     }
 
-    @GetMapping(path = "/verify/account/{key}")
-    public ResponseEntity<HttpResponse> verifyAccount(@PathVariable("key") String key) {
-        return ResponseEntity.ok().body(
-                HttpResponse.builder()
-                        .timeStamp(now().toString())
-                        .message(userService.verifyAccountKey(key).isEnabled() ? "Account already verified" : "Account verified")
-                        .status(OK)
-                        .statusCode(OK.value())
-                        .build());
-    }
+
 
     @GetMapping(path = "/refresh/token")
     public ResponseEntity<HttpResponse> refreshToken(HttpServletRequest request) {
