@@ -11,6 +11,7 @@ import com.familyfirstsoftware.invoiceApplication.repository.RoleRepository;
 import com.familyfirstsoftware.invoiceApplication.repository.UserRepository;
 
 import com.familyfirstsoftware.invoiceApplication.rowMapper.UserRowMapper;
+import com.familyfirstsoftware.invoiceApplication.service.EmailService;
 import com.familyfirstsoftware.invoiceApplication.utils.ImageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,14 +36,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static com.familyfirstsoftware.invoiceApplication.enumeration.RoleType.ROLE_USER;
 import static com.familyfirstsoftware.invoiceApplication.enumeration.VerificationType.ACCOUNT;
 import static com.familyfirstsoftware.invoiceApplication.enumeration.VerificationType.PASSWORD;
 import static com.familyfirstsoftware.invoiceApplication.query.UserQuery.*;
+import static com.familyfirstsoftware.invoiceApplication.utils.SmsUtils.sendSMS;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Map.of;
 import static java.util.Objects.requireNonNull;
@@ -61,6 +65,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
     private final NamedParameterJdbcTemplate jdbc;
     private final RoleRepository<Role> roleRepository;
     private final BCryptPasswordEncoder encoder;
+    private final EmailService emailService;
 
     @Override
     public User create(User user) {
@@ -73,15 +78,17 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             roleRepository.addRoleToUser(user.getId(), ROLE_USER.name());
             String verificationUrl = getVerificationUrl(UUID.randomUUID().toString(), ACCOUNT.getType());
             jdbc.update(INSERT_ACCOUNT_VERIFICATION_URL_QUERY, of("userId", user.getId(), "url", verificationUrl));
-            //emailService.sendVerificationUrl(user.getFirstName(), user.getEmail(), verificationUrl, ACCOUNT);
+            sendEmail(user.getFirstName(), user.getEmail(), verificationUrl, ACCOUNT);
             user.setEnabled(false);
             user.setNotLocked(true);
+            System.out.println(verificationUrl);
             return user;
         } catch (Exception exception) {
             log.error(exception.getMessage());
             throw new ApiException("An error occurred. Please try again.");
         }
     }
+
 
     @Override
     public Collection<User> list(int page, int pageSize) {
@@ -178,7 +185,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         try {
             jdbc.update(DELETE_VERIFICATION_CODE_BY_USER_ID, of("id", user.getId()));
             jdbc.update(INSERT_VERIFICATION_CODE_QUERY, of("userId", user.getId(), "code", verificationCode, "expirationDate", expirationDate));
-            //sendSMS(user.getPhone(), "From: Family First Software \nVerification code\n" + verificationCode);
+            sendSMS(user.getPhone(), "From: Family First Software \nVerification code\n" + verificationCode);
             log.info("Verification Code: {}", verificationCode);
         } catch (Exception exception) {
             log.error(exception.getMessage());
@@ -193,7 +200,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
             User userByCode = jdbc.queryForObject(SELECT_USER_BY_USER_CODE_QUERY, of("code", code), new UserRowMapper());
             User userByEmail = jdbc.queryForObject(SELECT_USER_BY_EMAIL_QUERY, of("email", email), new UserRowMapper());
             if(userByCode.getEmail().equalsIgnoreCase(userByEmail.getEmail())) {
-                // delete 2fa code
+                // delete 2fa code after successful login
                 jdbc.update(DELETE_CODE, of("code", code));
                 return userByCode;
             } else {
@@ -222,8 +229,7 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         }
     }
 
-    private void sendEmail(String firstName, String email, String verificationUrl, VerificationType verificationType) {
-    }
+
 
     @Override
     public User verifyPasswordKey(String key) {
@@ -248,6 +254,18 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         try {
             jdbc.update(UPDATE_USER_PASSWORD_BY_URL_QUERY, of("password", encoder.encode(password), "url", getVerificationUrl(key, PASSWORD.getType())));
             jdbc.update(DELETE_VERIFICATION_BY_URL_QUERY, of("url", getVerificationUrl(key, PASSWORD.getType())));
+        } catch (Exception exception) {
+            log.error(exception.getMessage()); // already longed in exception handling so don't need to here
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    @Override
+    public void renewPassword(Long userId, String password, String confirmPassword) {
+        if(!password.equals(confirmPassword)) throw new ApiException("Passwords don't match. Please try again.");
+        try {
+            jdbc.update(UPDATE_USER_PASSWORD_BY_USER_ID_QUERY, of("id", userId, "password", encoder.encode(password)));
+            //jdbc.update(DELETE_PASSWORD_VERIFICATION_BY_USER_ID_QUERY, of("userId", userId)); // TODO: uncomment.we wanted to use the same URL to keep testing
         } catch (Exception exception) {
             log.error(exception.getMessage()); // already longed in exception handling so don't need to here
             throw new ApiException("An error occurred. Please try again.");
@@ -336,7 +354,26 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         jdbc.update(UPDATE_USER_IMAGE_QUERY, of("imageUrl", imageUrl, "id", user.getId()));
     }
 
+    // TODO - Create a method that takes any task such as email and sms and runs it in a separate thread
 
+    private void sendEmail(String firstName, String email, String verificationUrl, VerificationType verificationType) {
+        CompletableFuture.runAsync(() -> emailService.sendVerificationEmail(firstName, email, verificationUrl, verificationType));
+        /* same as above
+        CompletableFuture<Void> future = CompletableFuture.runAsync(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    emailService.sendVerificationEmail(firstName, email, verificationUrl, verificationType);
+
+                } catch (Exception exception) {
+                    log.error(exception.getMessage());
+                    throw new ApiException("Unable to send email");
+                }
+
+            }
+        });
+         */
+    }
 
     private Boolean isLinkExpired(String key, VerificationType password) {
         try {
