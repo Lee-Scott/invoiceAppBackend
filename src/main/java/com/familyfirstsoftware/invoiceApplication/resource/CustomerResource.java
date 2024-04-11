@@ -24,7 +24,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+
 
 import static java.time.LocalDateTime.now;
 import static java.util.Map.of;
@@ -153,7 +153,7 @@ public class CustomerResource {
                         .data(of("user", userService.getUserByEmail(user.getEmail()),
                                 "invoice", invoice,
                                 "customer", invoice.getCustomer()))
-                        .message("Invoices retrieved successfully")
+                        .message("Invoice retrieved successfully")
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
                         .build());
