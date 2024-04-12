@@ -17,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+import static com.familyfirstsoftware.invoiceApplication.constant.Constants.*;
 import static com.familyfirstsoftware.invoiceApplication.utils.ExceptionUtils.processError;
 import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
@@ -28,11 +29,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @RequiredArgsConstructor
 @Slf4j
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
-    private static final String TOKEN_PREFIX = "Bearer ";
-    private static final String[] PUBLIC_ROUTES = { "/user/new/password", "/user/login", "/user/verify/code", "/user/register", "/user/refresh/token", "/user/image", "/user/image", "/user/new/password" }; // has to be exact
-    private static final String HTTP_OPTIONS_METHOD = "OPTIONS";
     private final TokenProvider tokenProvider;
-
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filter) throws ServletException, IOException {
@@ -41,7 +38,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
             String token = getToken(request);
             long userId = getUserId(request);
             //System.out.println("TOKEN: " + token);
-            if(tokenProvider.isTokenValid(userId, token)) {
+            if (tokenProvider.isTokenValid(userId, token)) {
                 List<GrantedAuthority> authorities = tokenProvider.getAuthorities(token);
                 // set authentication
                 Authentication authentication = tokenProvider.getAuthentication(userId, authorities, request);

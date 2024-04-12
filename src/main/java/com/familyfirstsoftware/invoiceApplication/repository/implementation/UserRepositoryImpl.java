@@ -42,6 +42,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static com.familyfirstsoftware.invoiceApplication.constant.Constants.DATE_FORMAT;
 import static com.familyfirstsoftware.invoiceApplication.enumeration.RoleType.ROLE_USER;
 import static com.familyfirstsoftware.invoiceApplication.enumeration.VerificationType.ACCOUNT;
 import static com.familyfirstsoftware.invoiceApplication.enumeration.VerificationType.PASSWORD;
@@ -61,7 +62,6 @@ import static org.apache.commons.lang3.time.DateUtils.addDays;
 @RequiredArgsConstructor
 @Slf4j
 public class UserRepositoryImpl implements UserRepository<User>, UserDetailsService {
-    private static final String DATE_FORMAT = "yyyy-MM-dd hh:mm:ss";
     private final NamedParameterJdbcTemplate jdbc;
     private final RoleRepository<Role> roleRepository;
     private final BCryptPasswordEncoder encoder;

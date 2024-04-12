@@ -4,6 +4,7 @@ package com.familyfirstsoftware.invoiceApplication.domain;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -21,17 +22,19 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return stream(this.role.getPermission().split(",".trim())).map(SimpleGrantedAuthority::new).collect(toList());
+        // list in the db is comma separated so these two are the same
+        //return stream(role.getPermission().split(",".trim())).map(SimpleGrantedAuthority::new).collect(toList());
+        return AuthorityUtils.commaSeparatedStringToAuthorityList(role.getPermission()); // "USER:READ,USER:DELETE"
     }
 
     @Override
     public String getPassword() {
-        return this.user.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return this.user.getEmail();
+        return user.getEmail();
     }
 
     // TODO implement the following method
@@ -46,7 +49,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return this.user.isNotLocked();
+        return user.isNotLocked();
     }
 
     // TODO implement the following method
@@ -57,10 +60,10 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return this.user.isEnabled();
+        return user.isEnabled();
     }
 
     public UserDTO getUser() {
-        return fromUser(this.user, role);
+        return fromUser(user, role);
     }
 }

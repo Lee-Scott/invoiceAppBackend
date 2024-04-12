@@ -34,6 +34,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.familyfirstsoftware.invoiceApplication.constant.Constants.TOKEN_PREFIX;
 import static com.familyfirstsoftware.invoiceApplication.dtoMapper.UserDTOMapper.toUser;
 import static com.familyfirstsoftware.invoiceApplication.enumeration.EventType.*;
 import static com.familyfirstsoftware.invoiceApplication.utils.ExceptionUtils.processError;
@@ -56,9 +57,7 @@ import static org.springframework.web.servlet.support.ServletUriComponentsBuilde
 @RequestMapping(path = "/user")
 @RequiredArgsConstructor
 public class UserResource {
-    private static final String TOKEN_PREFIX = "Bearer ";
     private static final long DELAY = 1; // delay in seconds shows the spinner can delete to make it faster
-
     private final UserService userService;
     private final RoleService roleService;
     private final EventService eventService;
@@ -446,19 +445,6 @@ public class UserResource {
         );
     }
 
-
-    /*@RequestMapping(path = "/error")
-    public ResponseEntity<HttpResponse> handleError(HttpServletRequest request) {
-        //log.info("User principle: {}", authentication);
-        return ResponseEntity.badRequest().body(
-                HttpResponse.builder()
-                        .timeStamp(now().toString())
-                        .reason("There is no mapping for a " + request.getMethod() + " request for this path on the server")
-                        .status(BAD_REQUEST)
-                        .statusCode(BAD_REQUEST.value())
-                        .build());
-    }*/
-
     @RequestMapping(path = "/error")
     public ResponseEntity<HttpResponse> handleError(HttpServletRequest request) {
         //log.info("User principle: {}", authentication);
@@ -472,23 +458,21 @@ public class UserResource {
 
     // TODO - try using a Long id instead of email. test the service then repository then Event query
     private UserDTO authenticate(String email, String password) {
-        //
+        UserDTO userByEmail = userService.getUserByEmail(email);
         try {
-            if(null != userService.getUserByEmail(email)) {
+            if(null != userByEmail) {
                 publisher.publishEvent(new NewUserEvent(email, LOGIN_ATTEMPT));
-                System.out.println("NewUserEvent(email, LOGIN_ATTEMPT)");
             }
             Authentication authentication = authenticationManager.authenticate(unauthenticated(email, password));
-
             UserDTO loggedInUser = getLoggedInUser(authentication);
             if(!loggedInUser.isUsingMfa()) {
                 publisher.publishEvent(new NewUserEvent(email, LOGIN_ATTEMPT_SUCCESS));
-                System.out.println("NewUserEvent(email, LOGIN_ATTEMPT_SUCCESS)");
             }
             return loggedInUser;
         } catch (Exception exception) {
-            publisher.publishEvent(new NewUserEvent(email, LOGIN_ATTEMPT_FAILURE));
-            System.out.println("NewUserEvent(email, LOGIN_ATTEMPT_FAILURE)");
+            if(null != userByEmail) {
+                publisher.publishEvent(new NewUserEvent(email, LOGIN_ATTEMPT_FAILURE));
+            }
             processError(request, response, exception);
             throw new ApiException(exception.getMessage());
         }

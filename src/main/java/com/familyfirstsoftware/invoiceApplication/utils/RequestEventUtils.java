@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import nl.basjes.parse.useragent.UserAgent;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
+import static com.familyfirstsoftware.invoiceApplication.constant.Constants.USER_AGENT_HEADER;
+import static com.familyfirstsoftware.invoiceApplication.constant.Constants.X_FORWARDED_FOR;
 import static nl.basjes.parse.useragent.UserAgent.AGENT_NAME;
 import static nl.basjes.parse.useragent.UserAgent.DEVICE_NAME;
 
@@ -13,9 +15,6 @@ import static nl.basjes.parse.useragent.UserAgent.DEVICE_NAME;
 // the RequestEventUtils parser takes forever to parse the request
 
 public class RequestEventUtils {
-
-    public static final String USER_AGENT_HEADER = "User-Agent";
-    public static final String X_FORWARDED_FOR = "X-FORWARDED-FOR";
 
     public static String getIpAddress(HttpServletRequest request) {
         String ipAddress = "Unknown IP";

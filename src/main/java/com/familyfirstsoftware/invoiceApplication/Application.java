@@ -2,24 +2,15 @@ package com.familyfirstsoftware.invoiceApplication;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.Ordered;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
-
-import java.util.Arrays;
-import java.util.List;
 
 @SpringBootApplication//(exclude = { SecurityAutoConfiguration.class })
-public class InvoiceApplication {
+public class Application {
 	private static final int STRENGHT = 12;
 
 	public static void main(String[] args) {
-		SpringApplication.run(InvoiceApplication.class, args);}
+		SpringApplication.run(Application.class, args);}
 
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {

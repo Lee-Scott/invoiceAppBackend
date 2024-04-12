@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.auth0.jwt.algorithms.Algorithm.HMAC512;
+import static com.familyfirstsoftware.invoiceApplication.constant.Constants.*;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -33,13 +34,6 @@ import static java.util.stream.Collectors.toList;
 @Component
 @RequiredArgsConstructor
 public class TokenProvider {
-    public static final String AUTHORITIES = "authorities";
-    private static final String FAMILY_FIRST_SOFTWARE = "FAMILY_FIRST_SOFTWARE";
-    private static final String CUSTOMER_MANAGEMENT_SERVICE = "CUSTOMER_MANAGEMENT_SERVICE";
-    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 1_800_000;
-    private static final long REFRESH_TOKEN_EXPIRATION_TIME = 432_000_000;
-    public static final String TOKEN_CANNOT_BE_VERIFIED = "Token cannot be verified";
-    private static final Logger logger = LoggerFactory.getLogger(TokenProvider.class);
     @Value("${jwt.secret}")
     private String secret;
     private final UserService userService;

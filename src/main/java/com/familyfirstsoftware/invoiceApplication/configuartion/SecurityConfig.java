@@ -25,11 +25,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.familyfirstsoftware.invoiceApplication.constant.Constants.PUBLIC_URLS;
 import static org.springframework.http.HttpMethod.DELETE;
-
 import static org.springframework.http.HttpMethod.OPTIONS;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
-import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * @author Junior RT
@@ -43,14 +42,13 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
     private final BCryptPasswordEncoder encoder;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final UserDetailsService userDetailsService;
     private final CustomAuthorizationFilter customAuthorizationFilter;
 
-    private static final String[] PUBLIC_URLS = {"/user/verify/password/**", "/user/login/**", "/user/verify/code/**",
-            "/user/register/**", "/user/resetpassword/**", "/user/profile/**", "/user/verify/account/**", "/user/refresh/token/**", "/user/image/**", "/user/new/password/**"};
 
     // pre 3.0.0
     /*@Bean
@@ -83,7 +81,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception { // Feel free to use the Lambda notation
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // method reference same as http.csrf(csrf -> csrf.disable()).cors(withDefaults());
                 .cors(configure -> configure.configurationSource(configurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .exceptionHandling(exception ->
@@ -92,7 +90,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request ->
                         request.requestMatchers(PUBLIC_URLS).permitAll()
                                 .requestMatchers(OPTIONS).permitAll()
-                                .requestMatchers(DELETE, "/user/delete/**")
+                                .requestMatchers(DELETE, "/user/delete/**") // TODO : add more authority restrictions
                                 .hasAuthority("DELETE:USER")
                                 .requestMatchers(DELETE, "/customer/delete/**")
                                 .hasAuthority("DELETE:CUSTOMER")
