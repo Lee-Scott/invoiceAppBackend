@@ -44,6 +44,8 @@ public class HandleException extends ResponseEntityExceptionHandler implements E
                         .build(), statusCode);
     }
 
+
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException exception, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
         log.error("HandleException.handleMethodArgumentNotValid: " + exception.getMessage());
@@ -59,9 +61,27 @@ public class HandleException extends ResponseEntityExceptionHandler implements E
                         .build(), statusCode);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<HttpResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
+        log.error("HandleException.handleIllegalArgumentException: ", exception);
+        return new ResponseEntity<>(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .reason(exception.getMessage())
+                        .developerMessage(exception.getMessage())
+                        .status(BAD_REQUEST)
+                        .statusCode(BAD_REQUEST.value())
+                        .build(), BAD_REQUEST);
+    }
+
     @ExceptionHandler(SQLIntegrityConstraintViolationException.class)
     public ResponseEntity<HttpResponse> sQLIntegrityConstraintViolationException(SQLIntegrityConstraintViolationException exception) {
         log.error("HandleException.sQLIntegrityConstraintViolationException: " + exception.getMessage());
+        log.error("HandleException.handleSQLIntegrityConstraintViolationException: ", exception);
+        log.debug("Error message: {}", exception.getMessage());
+        log.debug("SQL State: {}", exception.getSQLState());
+        log.debug("Error code: {}", exception.getErrorCode());
+        log.debug("Cause: ", exception.getCause());
         return new ResponseEntity<>(
                 HttpResponse.builder()
                         .timeStamp(now().toString())
@@ -205,6 +225,8 @@ public class HandleException extends ResponseEntityExceptionHandler implements E
         }
         return "Some error occurred";
     }
+
+
 }
 
 

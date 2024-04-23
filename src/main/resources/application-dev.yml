@@ -1,46 +1,22 @@
-jwt:
-  secret: mysupercomplexsecret
+# Database Config
+MYSQL_USERNAME: root
+MYSQL_PASSWORD: Ls4934506
+MYSQL_HOST: localhost
+MYSQL_PORT: 3306
+MYSQL_DATABASE: securecapita
 
-server:
-  error:
-    path: /user/error
-    whitelabel:
-      enabled: false
+# Server Config
+CONTAINER_PORT: 8080
+ACTIVE_PROFILE: dev # This gets overridden by the .env file
 
-spring:
-  autoconfigure:
-    #exclude: import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-  datasource:
-    url: jdbc:mysql://localhost:3306/securecapita
-    password: Ls4934506
-    username: root
-  jpa:
-    database-platform: org.hibernate.dialect.MySQL8InnoDBDialect
-    generate-ddl: true
-    show-sql: true
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        globally_quoted_identifiers: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
-  sql:
-    init:
-      mode: always
-      continue-on-error: false
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: familyfirstsoftwaresolutions@gmail.com
-    password: jlwp jymk dxua rkwg
-    properties:
-      mail:
-        smtp:
-          writetimeout: 5000
-          connectiontimeout: 5000
-          timeout: 5000
-          auth: true
-          starttls:
-            enable: true
-            required: true
+# Email Config
+EMAIL_HOST: smtp.gmail.com
+EMAIL_PORT: 587
+EMAIL_ID: familyfirstsoftwaresolutions@gmail.com
+EMAIL_PASSWORD: jlwp jymk dxua rkwg
+VERIFY_EMAIL_HOST: http://localhost:${CONTAINER_PORT}
+
+UI_APP_URL: http://localhost:4200
+
+# JWT Config
+JWT_SECRET: mysecuresecret

@@ -1,9 +1,14 @@
-spring:
-  jpa:
-    show-sql: true
-  profiles:
-    active: @spring.profiles.active@ #uses <profiles> in pom.xml
-    #active: dev
+# TODO : Set up prod and test
+# in bash mvn spring-boot:run
+# or bash mvn spring-boot:run -Dspring-boot.run.profiles=dev
+# CONTAINER_PORT=4000 mvn spring-boot:run
+
+#spring:
+#  jpa:
+#    show-sql: true
+#  profiles:
+#    active: @spring.profiles.active@ #uses <profiles> in pom.xml
+#    #active: dev
 
 
 application:
@@ -14,3 +19,59 @@ application:
 #  level:
 #    root: DEBUG
 #    com.familyfirstsoftware.invoiceApplication: INFO
+
+jwt:
+  secret: ${JWT_SECRET}
+
+server:
+  port: ${CONTAINER_PORT:8080} #defalut port is 8080
+  error:
+    path: /user/error
+    whitelabel:
+      enabled: false
+
+spring:
+  profiles:
+    active: ${ACTIVE_PROFILE:dev}
+  autoconfigure:
+  #exclude: import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}
+    password: ${MYSQL_PASSWORD}
+    username: ${MYSQL_USERNAME}
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8InnoDBDialect
+    generate-ddl: true
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+  sql:
+    init:
+      mode: always
+      continue-on-error: false
+  mail:
+    host: ${EMAIL_HOST} #smtp.gmail.com
+    port: ${EMAIL_PORT} #587
+    username: ${EMAIL_ID} #familyfirstsoftwaresolutions@gmail.com
+    password: ${EMAIL_PASSWORD} #jlwp jymk dxua rkwg
+    properties:
+      mail:
+        smtp:
+          writetimeout: 5000
+          connectiontimeout: 5000
+          timeout: 5000
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    verify:
+      host: ${VERIFY_EMAIL_HOST}
+
+ui:
+  app:
+    url: ${UI_APP_URL}

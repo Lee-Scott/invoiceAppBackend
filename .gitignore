@@ -104,3 +104,27 @@ application.properties
 application-dev.properties
 application-prod.properties
 application-test.properties
+
+.env.dev
+.env.prod
+start-dev.sh
+.env
+*.sh
+
+# Docker files
+Dockerfile
+docker-compose.yml
+
+# Log files
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IntelliJ IDEA specific
+.idea/
+
+# Maven
+target/
+*.iml

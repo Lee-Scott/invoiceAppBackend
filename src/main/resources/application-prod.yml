@@ -1,22 +1,22 @@
-spring:
-  #autoconfigure:
-    #exclude: import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-  datasource:
-    url: jdbc:mysql://localhost:3306/securecapita
-    password: Ls4934506
-    username: root
-  jpa:
-    database-platform: org.hibernate.dialect.MySQL8InnoDBDialect
-    generate-ddl: true
-    show-sql: true
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        globally_quoted_identifiers: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
-  sql:
-    init:
-      mode: always
-      continue-on-error: false
+# Database Config
+MYSQL_USERNAME: root
+MYSQL_PASSWORD: Ls4934506
+MYSQL_HOST: localhost
+MYSQL_PORT: 3306
+MYSQL_DATABASE: securecapita
+
+# Server Config
+CONTAINER_PORT: 8085
+ACTIVE_PROFILE: prod
+
+# Email Config
+EMAIL_HOST: smtp.gmail.com
+EMAIL_PORT: 587
+EMAIL_ID: familyfirstsoftwaresolutions@gmail.com
+EMAIL_PASSWORD: jlwp jymk dxua rkwg
+VERIFY_EMAIL_HOST: http://localhost:${CONTAINER_PORT}
+
+UI_APP_URL: http://localhost:4200
+
+# JWT Config
+JWT_SECRET: mysecuresecret
