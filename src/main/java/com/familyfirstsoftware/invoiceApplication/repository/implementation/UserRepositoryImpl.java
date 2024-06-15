@@ -165,6 +165,20 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         }
     }
 
+    @Override
+    public User findById(Long id) {
+    try {
+            return jdbc.queryForObject(SELECT_USER_BY_ID_QUERY, of("id", id), new UserRowMapper());
+        } catch (EmptyResultDataAccessException exception) {
+            log.error("Exception in UserRepositoryImpl.findById");
+            throw new ApiException("No User found by id: " + id);
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
+            throw new ApiException("An error occurred. Please try again.");
+        }
+
+    }
+
     // Helper method to create a test user
     private User createTestUser() {
         User testUser = new User();

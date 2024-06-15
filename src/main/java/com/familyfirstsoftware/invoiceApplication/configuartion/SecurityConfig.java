@@ -7,6 +7,7 @@ import com.familyfirstsoftware.invoiceApplication.handler.CustomAuthenticationEn
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -85,6 +86,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request ->
                         request.requestMatchers(PUBLIC_URLS).permitAll()
                                 .requestMatchers(OPTIONS).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/user/**").hasAuthority("READ:USER")
+                                .requestMatchers(HttpMethod.GET, "/customer/**").hasAuthority("READ:CUSTOMER")
+                                .requestMatchers(HttpMethod.POST, "/user/**").hasAuthority("CREATE:USER")
+                                .requestMatchers(HttpMethod.POST, "/customer/**").hasAuthority("CREATE:CUSTOMER")
+                                .requestMatchers(HttpMethod.PUT, "/user/**").hasAuthority("UPDATE:USER")
+                                .requestMatchers(HttpMethod.PUT, "/customer/**").hasAuthority("UPDATE:CUSTOMER")
+                                .requestMatchers(HttpMethod.DELETE, "/user/**").hasAuthority("DELETE:USER")
+                                .requestMatchers(HttpMethod.DELETE, "/customer/**").hasAuthority("DELETE:CUSTOMER")
                                 .requestMatchers(DELETE, "/user/delete/**") // TODO : add more authority restrictions
                                 .hasAuthority("DELETE:USER")
                                 .requestMatchers(DELETE, "/customer/delete/**")

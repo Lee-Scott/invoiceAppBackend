@@ -321,7 +321,7 @@ public class UserResource {
     @PatchMapping("/update/settings")
     public ResponseEntity<HttpResponse> updateAccountSettings(Authentication authentication, @RequestBody @Valid SettingsForm form) {
         UserDTO userDto = getAuthenticatedUser(authentication);
-        userService.updateAccoutSettings(userDto.getId(), form.getEnabled(), form.getNotLocked());
+        userService.updateAccountSettings(userDto.getId(), form.getEnabled(), form.getNotLocked());
         publisher.publishEvent(new NewUserEvent(userDto.getEmail(), ACCOUNT_SETTINGS_UPDATE));
         return ResponseEntity.ok().body(
                 HttpResponse.builder()

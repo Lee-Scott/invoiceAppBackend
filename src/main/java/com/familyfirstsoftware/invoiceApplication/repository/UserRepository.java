@@ -7,6 +7,7 @@ import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public interface UserRepository<T extends User> {
     /* Basic CRUD Operations */
@@ -18,6 +19,7 @@ public interface UserRepository<T extends User> {
 
     /* More Complex Operations */
     User getUserByEmail(String email);
+    T findById(Long id);
     void sendVerificationCode(UserDTO user);
     User verifyCode(String email, String code);
     void resetPassword(String email);
@@ -37,6 +39,8 @@ public interface UserRepository<T extends User> {
     T toggleMfa(String email);
 
     void updateProfileImage(UserDTO user, MultipartFile image);
+
+
 
 
 }

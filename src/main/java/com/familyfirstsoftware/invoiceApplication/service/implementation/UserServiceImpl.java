@@ -10,17 +10,24 @@ import com.familyfirstsoftware.invoiceApplication.repository.RoleRepository;
 import com.familyfirstsoftware.invoiceApplication.repository.UserRepository;
 import com.familyfirstsoftware.invoiceApplication.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import static com.familyfirstsoftware.invoiceApplication.dtoMapper.UserDTOMapper.fromUser;
 
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository<User> userRepository;
     private final RoleRepository<Role> roleRoleRepository;
     private final EventRepository<Event> eventRepository;
+
+    @Autowired
+    public UserServiceImpl(UserRepository<User> userRepository, RoleRepository<Role> roleRoleRepository, EventRepository<Event> eventRepository) {
+        this.userRepository = userRepository;
+        this.roleRoleRepository = roleRoleRepository;
+        this.eventRepository = eventRepository;
+    }
 
     @Override
     public UserDTO createUser(User user) {
@@ -85,7 +92,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateAccoutSettings(Long id, Boolean enabled, Boolean notLocked) {
+    public void updateAccountSettings(Long id, Boolean enabled, Boolean notLocked) {
         userRepository.updateAccountSettings(id, enabled, notLocked);
     }
 
@@ -99,8 +106,6 @@ public class UserServiceImpl implements UserService {
         userRepository.updateProfileImage(user, image);
     }
 
-
-
     /* never should return the user object, but instead the dto or void. this is how we are separating these concerns
     @Override
     public User getUser(String email) {
@@ -111,15 +116,5 @@ public class UserServiceImpl implements UserService {
         return fromUser(user, roleRoleRepository.getRoleByUserId(user.getId()));
     }
 }
-
-
-
-
-
-
-
-
-
-
 
 

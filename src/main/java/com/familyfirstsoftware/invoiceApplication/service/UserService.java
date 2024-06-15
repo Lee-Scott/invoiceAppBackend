@@ -2,7 +2,6 @@ package com.familyfirstsoftware.invoiceApplication.service;
 
 import com.familyfirstsoftware.invoiceApplication.domain.User;
 import com.familyfirstsoftware.invoiceApplication.dto.UserDTO;
-import com.familyfirstsoftware.invoiceApplication.event.Event;
 import com.familyfirstsoftware.invoiceApplication.form.UpdateForm;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,7 +24,7 @@ public interface UserService {
 
     void updateUserRole(Long userId, String roleName);
 
-    void updateAccoutSettings(Long id, Boolean enabled, Boolean notLocked);
+    void updateAccountSettings(Long id, Boolean enabled, Boolean notLocked);
 
     UserDTO toggleMfa(String email);
 
